@@ -1,926 +1,465 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tayu design. | AIラボ 実験と創造の記録。</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                fontFamily: { sans: ['"Noto Sans JP"', '"Inter"', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+                extend: { colors: { 'accent-red': '#E60012', 'studio-black': '#000000', 'studio-white': '#FFFFFF', 'studio-gray': '#F8F9FA', 'border-light': '#EEEEEE' } }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.8;
+            color: #000000;
+            background-color: #FFFFFF;
+            font-family: "Noto Sans JP", "Inter", ui-sans-serif, system-ui, sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 { 
+            letter-spacing: -0.025em;
+            line-height: 1.25;
+            font-family: "Noto Sans JP", "Inter", ui-sans-serif, system-ui, sans-serif;
+        }
+        .whitespace-relaxed { padding: 6rem 1.5rem; }
+        @media (min-width: 768px) { .whitespace-relaxed { padding: 10rem 3rem; } }
+        @media (min-width: 1024px) { .whitespace-relaxed { padding-left: 6rem; padding-right: 6rem; } }
+        .fade-up { opacity: 0; transform: translateY(30px); transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+        .fade-up.is-visible { opacity: 1; transform: translateY(0); }
+        .fade-left { opacity: 0; transform: translateX(-40px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+        .fade-left.is-visible { opacity: 1; transform: translateX(0); }
 
-import { motion, useScroll, useTransform } from "motion/react";
-import { ArrowRight, Menu, X, ArrowUpRight, Sparkles } from "lucide-react";
-import { useState, useEffect } from "react";
+        .accordion-wrapper { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.4s ease, opacity 0.4s ease; opacity: 0; }
+        .accordion-wrapper.is-open { grid-template-rows: 1fr; opacity: 1; }
+        .accordion-inner { overflow: hidden; }
 
-const WORKS = [
-  {
-    id: 1,
-    title: "シネマティック映像の生成実験",
-    tool: "Runway Gen-3 Alpha",
-    category: "動画",
-    tags: ["Runway", "Luma Dream Machine", "Dify"],
-    features: "テキストから高精細なシネマティック映像を生成する機能。",
-    outcome: "ライティングの指定により、実写と見紛うクオリティの出力が可能になった。",
-    image: "https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&q=80&w=1000",
-  },
-  {
-    id: 2,
-    title: "建築デザインのパターン生成",
-    tool: "Midjourney v6.1",
-    category: "画像",
-    tags: ["Midjourney", "Stable Diffusion"],
-    features: "複雑なプロンプトを理解し、意図した通りの構図で画像を生成する。",
-    outcome: "パラメータ調整により、素材の質感を微細にコントロールする手法を確立した。",
-    image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1000",
-  },
-  {
-    id: 3,
-    title: "論理的対話を導くプロンプト",
-    tool: "Claude 3.5 Sonnet",
-    category: "プロンプト",
-    tags: ["Claude", "ChatGPT"],
-    features: "一歩ずつ考えさせる（CoT）手法を用いた思考プロセス。",
-    outcome: "複雑な課題に対しても、AIが段階的な解決策を提示し、納得感を高められた。",
-    image: "https://images.unsplash.com/photo-1456324504439-39ba7144c529?auto=format&fit=crop&q=80&w=1000",
-  },
-  {
-    id: 4,
-    title: "リアルタイム映像変換の極致",
-    tool: "Krea.ai",
-    category: "リアルタイム",
-    tags: ["Krea", "ComfyUI"],
-    features: "スケッチやWebカメラ動画をリアルタイムで高品質な映像に変換する。",
-    outcome: "低遅延でのスタイル変換が可能になり、ライブパフォーマンスへの応用が期待できる。",
-    image: "https://images.unsplash.com/photo-1551033406-611cf9a28f67?auto=format&fit=crop&q=80&w=1000",
-  },
-  {
-    id: 5,
-    title: "AIラボ・サイト制作ログ",
-    tool: "Google AI Studio & Cursor",
-    category: "ログ",
-    tags: ["React", "Tailwind", "Gemini"],
-    features: "AIと対話しながらサイトのデザインから実装までを一貫して行うプロセス。",
-    outcome: "プロンプトによる指示だけで、複雑なレイアウト調整や多言語化が数分で完了した。",
-    image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=1000",
-  },
-];
+        .service-card { transition: all 0.4s ease; }
+        .service-card.is-open { height: auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        .service-card:not(.is-open) { height: 24rem; }
+        .service-card:hover:not(.is-open) { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05); }
+        .service-card:hover .service-toggle { opacity: 1; }
+        .service-card.is-open .service-toggle { opacity: 1; background-color: #000000; color: #ffffff; border-color: #000000; }
+        .service-card.is-open .service-toggle-icon { transform: rotate(90deg); }
 
-interface ToolDetail {
-  name: string;
-  steps: string[];
-  link: string;
-  prompt: string;
-  result: string;
-}
-
-interface Service {
-  title: string;
-  description: string;
-  index: string;
-  tools: ToolDetail[];
-}
-
-const SERVICES: Service[] = [
-  {
-    title: "動画生成",
-    description: "最新のVideo AIを活用した生成プロセスと検証記録。",
-    index: "01",
-    tools: [
-      {
-        name: "Canva",
-        steps: [
-          "1. 「マジックメディア」機能の選択",
-          "2. 生成プロンプトおよびスタイルの入力",
-          "3. 生成された映像の編集と音声の統合"
-        ],
-        link: "https://www.canva.com/",
-        prompt: "未来の都市、空飛ぶ車、シネマティック、青白いライティング",
-        result: "青白く光る未来の街を空飛ぶ車が通り抜ける15秒の映像"
-      },
-      {
-        name: "CapCut",
-        steps: [
-          "1. 「スクリプトから動画生成」機能の選択",
-          "2. 動画台本（スクリプト）の入力",
-          "3. AIによる素材選定とナレーションの動的生成"
-        ],
-        link: "https://www.capcut.com/",
-        prompt: "AIの魅力について解説するショート動画の台本",
-        result: "自動でナレーションとオシャレな字幕がついた解説動画"
-      },
-      {
-        name: "Gemini",
-        steps: [
-          "1. ビジュアル構成案および詳細スクリプトの生成",
-          "2. シーンごとの視覚的指示（プロンプト）の最適化",
-          "3. 制作工程におけるタスク管理とスケジューリング"
-        ],
-        link: "https://gemini.google.com/",
-        prompt: "30秒のAI紹介動画の、誰にでも伝わる絵コンテを書いて",
-        result: "シーンごとのイラスト構成やセリフが書かれた詳しい指示書"
-      }
-    ]
-  },
-  {
-    title: "画像生成",
-    description: "AIによるビジュアル生成プロトタイプの構築と、プロンプトエンジニアリングの最適化手法。",
-    index: "02",
-    tools: [
-      {
-        name: "Stable Diffusion",
-        steps: [
-          "1. 目的のモデルおよびパラメータの設定",
-          "2. プロンプト（指示文）および除外要素の入力",
-          "3. 生成実行後のバリエーション比較と保存"
-        ],
-        link: "https://stability.ai/",
-        prompt: "masterpiece, best quality, girl with white hair, standing in sunflowers",
-        result: "ひまわり畑に立つ白い髪の少女のイラスト"
-      },
-      {
-        name: "Midjourney",
-        steps: [
-          "1. Discord上で「/imagine」コマンドを実行",
-          "2. 英文プロンプトによる詳細な構図・質感の指示",
-          "3. アップスケール（U）による高解像度データの出力"
-        ],
-        link: "https://www.midjourney.com/",
-        prompt: "A futuristic city made of glass, cinematic lighting --ar 16:9",
-        result: "ガラスでできた透明感あふれる未来都市の画像"
-      },
-      {
-        name: "Gemini",
-        steps: [
-          "1. 生成対象の要件を具体的かつ簡潔に入力",
-          "2. アスペクト比等のフォーマットを指定",
-          "3. チャット形式での逐次的な修正と品質向上"
-        ],
-        link: "https://gemini.google.com/",
-        prompt: "宇宙でお茶を飲んでいる可愛い白猫の画像を作って",
-        result: "星空の下でティーカップを持つ可愛い猫の画像"
-      },
-      {
-        name: "ChatGPT (DALL-E 3)",
-        steps: [
-          "1. 生成したいコンテンツのイメージを日本語で入力",
-          "2. 対話を通じた詳細なレイアウトや色調の調整",
-          "3. 提案されたバリエーションからの最適解の選定"
-        ],
-        link: "https://openai.com/chatgpt",
-        prompt: "空を飛ぶ巨大なクジラと、その上に乗る冒険者のファンタジー絵",
-        result: "幻想的な空飛ぶクジラの迫力あるイラスト"
-      },
-      {
-        name: "Flux.1",
-        steps: [
-          "1. 最新のFluxモデルが提供されているサイトへアクセス",
-          "2. 簡潔なテキストプロンプトによる生成指示",
-          "3. 高精細かつ写実的な出力結果の検証と保存"
-        ],
-        link: "https://blackforestlabs.ai/",
-        prompt: "hyper-realistic close up of a human eye with a galaxy inside",
-        result: "瞳の虹彩が銀河の渦になっている、超リアルな瞳"
-      },
-      {
-        name: "Leonardo.ai",
-        steps: [
-          "1. 用途に合わせたプリセットスタイルの選択",
-          "2. パラメータ調整およびプロンプトの入力",
-          "3. AI Canvasによる画像の領域拡張および再編集"
-        ],
-        link: "https://leonardo.ai/",
-        prompt: "Isometric 3D icon of a cozy laboratory with red points",
-        result: "赤がアクセントの、立体的で可愛い研究所のアイコン"
-      }
-    ]
-  },
-  {
-    title: "AIエージェント",
-    description: "自律型エージェントの構築と業務フローへの統合検証。",
-    index: "03",
-    tools: [
-      {
-        name: "Dify",
-        steps: [
-          "1. ナレッジベース（知識データ）の構築",
-          "2. 思考プロセス（ワークフロー）の設計",
-          "3. アプリケーションとしてのデプロイと検証"
-        ],
-        link: "https://dify.ai/",
-        prompt: "このプリントの内容を分かりやすく3行で教えてくれるボットを作って",
-        result: "複雑な資料を瞬時に要約・解説するカスタムアプリケーション"
-      },
-      {
-        name: "CrewAI",
-        steps: [
-          "1. 各エージェントへの役割（Role）定義",
-          "2. タスク要求および実行順序の設定",
-          "3. 複数エージェント間の自律的協調による出力"
-        ],
-        link: "https://www.crewai.com/",
-        prompt: "歴史担当と作家担当の2人で協力して作品を書いて",
-        result: "複数のAIが役割を分担して生成した、一貫性のあるコンテンツ"
-      },
-      {
-        name: "AutoGPT",
-        steps: [
-          "1. 目標（Goal）の設定と権限の付与",
-          "2. AIによる逐次的なタスク生成と判断の監視",
-          "3. 自動収集された情報に基づく成果物の出力"
-        ],
-        link: "https://github.com/Significant-Gravitas/AutoGPT",
-        prompt: "将来有望なAIニュースを5つ集めてレポートを保存して",
-        result: "人による介入なしで完走した調査レポート"
-      },
-      {
-        name: "GPT Engineer",
-        steps: [
-          "1. アプリケーションの要件定義の入力",
-          "2. コードベースの自動生成およびプレビュー",
-          "3. 動的なデバッグと機能の追加実装"
-        ],
-        link: "https://gptengineer.app/",
-        prompt: "今日のラッキーアイテムを教えてくれるおみくじアプリを作って",
-        result: "ノーコードで実装されたフルスタックWebアプリケーション"
-      },
-      {
-        name: "AgentGPT",
-        steps: [
-          "1. エージェントの設計とミッションの設定",
-          "2. タスクの自動生成と自律的実行",
-          "3. 最終成果物の統合とフィードバック"
-        ],
-        link: "https://agentgpt.reworkd.ai/",
-        prompt: "文化祭で最高に出し物を盛り上げる方法を10個探して",
-        result: "目標達成のためにAIが立案した戦略的なアイデアリスト"
-      }
-    ]
-  },
-  {
-    title: "Web制作",
-    description: "AIを活用した迅速なプロトタイピングとエンジニアリング。",
-    index: "04",
-    tools: [
-      {
-        name: "Google AI Studio",
-        steps: [
-          "1. BuildモードによるUI/UX設計の開始",
-          "2. 対話形式によるコンポーネントの反復的修正",
-          "3. 高度なエンジニアリング指示によるコードの最適化"
-        ],
-        link: "https://aistudio.google.com/app/build",
-        prompt: "宇宙をテーマにした、かっこいい自己紹介サイトを作って。日本語でお願い。",
-        result: "デザインからロジックまで完結した、本番レベルのWebプロジェクト"
-      },
-      {
-        name: "GitHub Pages",
-        steps: [
-          "1. GitHubリポジトリの作成および初期設定",
-          "2. ソースコードのアップロードとバージョン管理",
-          "3. ホスティング設定によるグローバル公開"
-        ],
-        link: "https://pages.github.com/",
-        prompt: "作成した index.html をインターネット上に公開する",
-        result: "世界中からアクセス可能なレスポンシブWebサイト"
-      }
-    ]
-  }
-
-];
-
-interface ServiceCardProps {
-  service: Service;
-  index: number;
-  isOpen: boolean;
-  onToggle: () => void;
-  key?: number | string;
-}
-
-const ServiceCard = ({ service, index, isOpen, onToggle }: ServiceCardProps) => {
-  const [openToolIdx, setOpenToolIdx] = useState<number | null>(null);
-
-  // Generate a URL-friendly ID from the title
-  const idMap: Record<string, string> = {
-    "動画生成": "video",
-    "画像生成": "image",
-    "AIエージェント": "agent",
-    "Web制作": "web"
-  };
-  const sectionId = idMap[service.title] || "services";
-
-  return (
-    <motion.div
-      id={sectionId}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-      viewport={{ once: true }}
-      className={`bg-white p-10 md:p-14 border border-border-light flex flex-col justify-between transition-all group overflow-hidden ${
-        isOpen ? "h-auto shadow-2xl" : "h-96 hover:shadow-2xl hover:shadow-black/5 cursor-pointer"
-      }`}
-      onClick={() => !isOpen && onToggle()}
-    >
-      <div className="w-full">
-        <div className="flex justify-between items-start mb-8">
-          <span className="text-xs font-bold text-accent-red tracking-[0.2em]">{service.index.padStart(2, '0')}</span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggle();
-            }}
-            className={`transition-all p-3 hover:bg-gray-100 rounded-full border border-border-light ${isOpen ? "rotate-90 bg-studio-black text-white border-studio-black" : "opacity-0 group-hover:opacity-100 text-accent-red"}`}
-          >
-            <ArrowRight size={20} />
-          </button>
-        </div>
-        
-        <h3 className="text-3xl md:text-5xl font-bold mb-6 tracking-tighter">{service.title}</h3>
-        <p className="text-gray-400 font-light leading-[1.8] mb-10 text-lg max-w-sm">{service.description}</p>
-
-        {/* Unified Tool List Accordion */}
-        <motion.div
-          initial={false}
-          animate={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }}
-          className="overflow-hidden"
-        >
-          <div className="pt-10 border-t border-border-light space-y-6">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-6 block">詳細マニュアル</p>
-            {service.tools.map((tool, idx) => (
-              <div key={idx} className={`border transition-all duration-300 ${openToolIdx === idx ? "border-accent-red bg-white" : "border-border-light bg-studio-gray/30 hover:border-gray-300"}`}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenToolIdx(openToolIdx === idx ? null : idx);
-                  }}
-                  className="w-full flex items-center justify-between p-6 transition-colors group/tool"
-                >
-                  <div className="flex items-center space-x-6">
-                    <div className={`w-1.5 h-1.5 rounded-full ${openToolIdx === idx ? "bg-accent-red" : "bg-gray-300"}`} />
-                    <span className={`font-bold text-lg tracking-tight ${openToolIdx === idx ? "text-studio-black" : "text-gray-500"}`}>{tool.name}</span>
-                  </div>
-                  <motion.div
-                    animate={{ rotate: openToolIdx === idx ? 90 : 0 }}
-                    className={openToolIdx === idx ? "text-accent-red" : "text-gray-300"}
-                  >
-                    <ArrowRight size={20} />
-                  </motion.div>
-                </button>
-                <motion.div
-                  initial={false}
-                  animate={{ height: openToolIdx === idx ? "auto" : 0, opacity: openToolIdx === idx ? 1 : 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="px-8 pb-10 pt-4">
-                    <div className="border-t border-border-light pt-8 space-y-12">
-                      {/* Steps */}
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-red mb-6 flex items-center space-x-4">
-                          <span>1. 使い方の手順</span>
-                          <div className="h-px bg-accent-red/20 flex-grow" />
-                        </p>
-                        <ul className="space-y-4">
-                          {tool.steps.map((step, sIdx) => (
-                            <li key={sIdx} className="text-base font-medium flex items-start space-x-4">
-                              <span className="bg-accent-red text-white text-[10px] font-bold rounded-full w-6 h-6 flex items-center justify-center mt-1 shrink-0">
-                                {sIdx + 1}
-                              </span>
-                              <span className="text-studio-black leading-[1.8]">{step}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {/* Link */}
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center space-x-4">
-                          <span>2. 公式リンク</span>
-                          <div className="h-px bg-gray-200 flex-grow" />
-                        </p>
-                        <a
-                          href={tool.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="group/link inline-flex items-center space-x-6 bg-studio-black text-white px-10 py-6 text-[10px] font-bold tracking-[0.2em] hover:bg-accent-red transition-all shadow-xl uppercase"
-                        >
-                          <span>Launch Platform</span>
-                          <ArrowUpRight size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                        </a>
-                      </div>
-
-                      {/* Result */}
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-6 flex items-center space-x-4">
-                          <span>3. 実験結果（成果物）</span>
-                          <div className="h-px bg-gray-200 flex-grow" />
-                        </p>
-                        <div className="bg-studio-gray p-8 border border-border-light rounded-sm group/card relative overflow-hidden">
-                          <motion.div 
-                            animate={{ rotate: [0, 5, 0, -5, 0] }}
-                            transition={{ duration: 5, repeat: Infinity }}
-                            className="absolute -top-10 -right-10 w-32 h-32 bg-accent-red/5 rounded-full blur-3xl" 
-                          />
-                          <div className="flex items-center space-x-4 mb-4 relative z-10">
-                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
-                              <Sparkles size={20} className="text-accent-red" />
-                            </div>
-                            <p className="text-sm font-bold tracking-tighter">SUCCESSFUL OUTPUT</p>
-                          </div>
-                          <p className="text-base text-gray-600 italic leading-[1.8] relative z-10 font-medium whitespace-pre-wrap">「{tool.result}」</p>
-                        </div>
-                      </div>
-
-                      {/* Prompt */}
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-studio-black/40 mb-6 flex items-center space-x-4">
-                          <span>4. 使用したプロンプト</span>
-                          <div className="h-px bg-gray-200 flex-grow" />
-                        </p>
-                        <div className="bg-studio-black p-8 font-mono text-xs text-green-400 rounded-sm shadow-xl relative overflow-hidden group/code cursor-text" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-between mb-4 border-b border-gray-800 pb-3">
-                            <span className="text-gray-500 font-bold uppercase tracking-widest text-[9px]">Prompt Content</span>
-                            <div className="flex space-x-1.5">
-                              <div className="w-2 h-2 rounded-full bg-red-900/50" />
-                              <div className="w-2 h-2 rounded-full bg-orange-900/50" />
-                              <div className="w-2 h-2 rounded-full bg-green-900/50" />
-                            </div>
-                          </div>
-                          <code className="block whitespace-pre-wrap leading-relaxed select-all">{tool.prompt}</code>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-    </motion.div>
-  );
-};
-
-
-export default function App() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [openAccordionIdx, setOpenAccordionIdx] = useState<number | null>(null);
-  const { scrollY } = useScroll();
-  const opacity = useTransform(scrollY, [0, 200], [1, 0]);
-  const scale = useTransform(scrollY, [0, 300], [1, 1.05]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  return (
-    <div className="min-h-screen bg-studio-white selection:bg-accent-red selection:text-white">
-      {/* Navigation */}
-      <nav
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-          scrolled ? "bg-white/80 backdrop-blur-md border-b border-border-light py-4" : "bg-transparent py-8"
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
-          <a href="#" className="text-2xl font-extrabold tracking-tighter text-studio-black">
-            tayu design<span className="text-accent-red">.</span>
-          </a>
-
-          {/* Desktop Nav */}
-          <div className="hidden md:flex space-x-12 items-center">
-            {[
-              { id: "Home", label: "ホーム" },
-              { id: "video", label: "動画生成" },
-              { id: "image", label: "画像生成" },
-              { id: "agent", label: "AIエージェント" },
-              { id: "web", label: "Web制作" },
-              { id: "log", label: "制作ログ" }
-            ].map((item) => (
-              <a
-                key={item.id}
-                href={item.id === "Home" ? "#" : `#${item.id}`}
-                className="text-sm font-medium tracking-wide hover:text-accent-red transition-colors"
-              >
-                {item.label}
-              </a>
-            ))}
-            <button className="bg-studio-black text-white px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-accent-red transition-all">
-              お問い合わせ
+        @keyframes spinPulse {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(5deg) scale(1.05); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+    </style>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="min-h-screen bg-studio-white selection:bg-accent-red selection:text-white">
+    <nav id="navbar" class="fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-transparent py-8">
+        <div class="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
+            <a href="#" class="text-2xl font-extrabold tracking-tighter text-studio-black">tayu design<span class="text-accent-red">.</span></a>
+            <div class="hidden md:flex space-x-12 items-center">
+                <a href="#" class="text-sm font-medium tracking-wide hover:text-accent-red transition-colors">ホーム</a>
+                <a href="#video" class="text-sm font-medium tracking-wide hover:text-accent-red transition-colors">動画生成</a>
+                <a href="#image" class="text-sm font-medium tracking-wide hover:text-accent-red transition-colors">画像生成</a>
+                <a href="#agent" class="text-sm font-medium tracking-wide hover:text-accent-red transition-colors">AIエージェント</a>
+                <a href="#web" class="text-sm font-medium tracking-wide hover:text-accent-red transition-colors">Web制作</a>
+                <a href="#log" class="text-sm font-medium tracking-wide hover:text-accent-red transition-colors">制作ログ</a>
+                <button class="bg-studio-black text-white px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-accent-red transition-all">お問い合わせ</button>
+            </div>
+            <button id="mobile-menu-btn" class="md:hidden flex items-center justify-center p-2 z-50">
+                <i data-lucide="menu" id="menu-icon" style="width: 24px; height: 24px;"></i>
+                <i data-lucide="x" id="close-icon" class="hidden" style="width: 24px; height: 24px;"></i>
             </button>
-          </div>
-
-          {/* Mobile Toggle */}
-          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
         </div>
-      </nav>
-
-      {/* Mobile Menu Overlay */}
-      {isMenuOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed inset-0 bg-white z-40 pt-24 px-6 md:hidden"
-        >
-          <div className="flex flex-col space-y-8 text-center pt-20">
-            {[
-              { id: "home", label: "ホーム" },
-              { id: "video", label: "動画生成" },
-              { id: "image", label: "画像生成" },
-              { id: "agent", label: "AIエージェント" },
-              { id: "web", label: "Web制作" },
-              { id: "log", label: "制作ログ" }
-            ].map((item) => (
-              <a
-                key={item.id}
-                href={`#${item.id}`}
-                className="text-4xl font-bold tracking-tighter"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.label}
-              </a>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Hero Section */}
-      <section className="relative h-screen flex items-center overflow-hidden">
-        <motion.div style={{ scale, opacity }} className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-white z-10" />
-          <img
-            src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000"
-            className="w-full h-full object-cover opacity-10 grayscale"
-            alt="Minimalist Architecture"
-            referrerPolicy="no-referrer"
-          />
-        </motion.div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="max-w-4xl"
-          >
-            <h1 className="text-6xl md:text-8xl lg:text-9xl font-extrabold leading-[1.1] tracking-tighter text-studio-black mb-12">
-              AIラボ <br />
-              <span className="text-accent-red">実験</span>と<br />
-              創造の記録。
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mb-12 leading-relaxed font-light">
-              最新AIツールの活用方法と実験結果を記録する、個人のAIラボラトリー。
-            </p>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="group flex items-center space-x-4 bg-studio-black text-white px-10 py-5 rounded-none font-bold tracking-widest hover:bg-accent-red transition-all"
-            >
-              <span>実験結果を見る</span>
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
-            </motion.button>
-          </motion.div>
+    </nav>
+    <div id="mobile-menu" class="hidden fixed inset-0 bg-white z-40 pt-24 px-6 md:hidden transition-opacity duration-300 opacity-0">
+        <div class="flex flex-col space-y-8 text-center pt-20">
+            <a href="#" class="mobile-link text-4xl font-bold tracking-tighter">ホーム</a>
+            <a href="#video" class="mobile-link text-4xl font-bold tracking-tighter">動画生成</a>
+            <a href="#image" class="mobile-link text-4xl font-bold tracking-tighter">画像生成</a>
+            <a href="#agent" class="mobile-link text-4xl font-bold tracking-tighter">AIエージェント</a>
+            <a href="#web" class="mobile-link text-4xl font-bold tracking-tighter">Web制作</a>
+            <a href="#log" class="mobile-link text-4xl font-bold tracking-tighter">制作ログ</a>
         </div>
-      </section>
-
-      {/* Research Areas Section */}
-      <section id="services" className="whitespace-relaxed bg-studio-gray">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 space-y-4">
-            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tighter">
-              研究 <br />
-              <span className="text-accent-red">領域</span>。
-            </h2>
-            <p className="text-lg text-gray-500 max-w-sm leading-relaxed">
-              AI技術の進化をリアルタイムで追い、クリエイティブへの応用を試行しています。
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {SERVICES.map((service, i) => (
-              <ServiceCard
-                key={i}
-                service={service}
-                index={i}
-                isOpen={openAccordionIdx === i}
-                onToggle={() => setOpenAccordionIdx(openAccordionIdx === i ? null : i)}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Experiments Section */}
-      <section id="works" className="whitespace-relaxed">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-24 flex items-center justify-between">
-            <h2 className="text-5xl md:text-7xl font-extrabold tracking-tighter">実験ノート</h2>
-            <div className="hidden md:block w-32 h-[1px] bg-border-light" />
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-x-12 gap-y-24">
-            {WORKS.map((work, i) => (
-              <motion.div
-                key={work.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i % 2 * 0.1 }}
-                viewport={{ once: true }}
-                className="group cursor-pointer"
-              >
-                <div className="relative overflow-hidden mb-8 aspect-[4/5] bg-studio-gray">
-                  <motion.img
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                    src={work.image}
-                    alt={work.title}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute top-6 left-6 bg-white px-4 py-2 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0 text-xs font-bold tracking-widest text-studio-black shadow-lg">
-                    DETAIL
-                  </div>
-                </div>
-                <div className="space-y-6">
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-[10px] font-bold bg-accent-red text-white px-2 py-0.5 tracking-widest">
-                      {work.category}
-                    </span>
-                    {work.tags.map((tag) => (
-                      <span key={tag} className="text-[10px] font-bold bg-studio-black text-white px-2 py-0.5 tracking-widest">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-3xl font-bold tracking-tight mb-4">{work.title}</h3>
-                    <div className="grid grid-cols-1 gap-4 text-sm border-l-2 border-accent-red pl-4">
-                      <div>
-                        <span className="text-gray-400 font-bold block text-[10px] uppercase tracking-widest mb-1">ツール名</span>
-                        <p className="font-medium">{work.tool}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-400 font-bold block text-[10px] uppercase tracking-widest mb-1">機能</span>
-                        <p className="font-light text-gray-600 italic">「{work.features}」</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-400 font-bold block text-[10px] uppercase tracking-widest mb-1">学習の成果</span>
-                        <p className="font-medium">成果：{work.outcome}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* About Section */}
-      <section id="about" className="whitespace-relaxed bg-studio-black text-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-24 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-12">
-                実験は、<br />終わらない。
-              </h2>
-              <p className="text-xl md:text-2xl text-gray-400 leading-relaxed font-light mb-12">
-                このサイトは、個人のAIラボラトリーです。日進月歩のAI技術を実際に使い倒し、何ができるのか、どんな課題があるのかをアーカイブしています。技術と表現の新しい形を模索しています。
-              </p>
-              <div className="flex space-x-12">
-                <div>
-                  <div className="text-4xl font-bold mb-2">50+</div>
-                  <div className="text-xs uppercase tracking-widest text-gray-500 font-bold">検証ツール数</div>
-                </div>
-                <div>
-                  <div className="text-4xl font-bold mb-2">300+</div>
-                  <div className="text-xs uppercase tracking-widest text-gray-500 font-bold">生成アーカイブ</div>
-                </div>
-              </div>
-            </motion.div>
-            <div className="relative aspect-video">
-              <img
-                src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1000"
-                className="w-full h-full object-cover filter grayscale"
-                alt="AI研究イメージ"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-accent-red/10 mix-blend-multiply" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* AI Log Section */}
-      <section id="log" className="whitespace-relaxed bg-white border-y border-border-light">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div className="max-w-2xl">
-              <h2 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-8">AI LOG<span className="text-accent-red">.</span></h2>
-              <p className="text-2xl text-gray-400 font-light leading-relaxed">
-                Google AI Studio × GitHub Pagesでサイトを作る完全マニュアル
-              </p>
-            </div>
-            <div className="bg-studio-gray p-6 border-l-4 border-accent-red">
-              <p className="text-xs font-bold tracking-widest text-gray-500 uppercase mb-2">Last Updated</p>
-              <p className="text-sm font-mono font-bold tracking-tighter">2026.05.12 REV.04</p>
-            </div>
-          </div>
-
-          <div className="grid lg:grid-cols-2 gap-12 mb-32">
-            {[
-              {
-                step: "01",
-                title: "構成案の作成",
-                desc: "理想のサイト構成やデザインの方向性をAIに伝え、ベースとなる設計図を構築します。",
-                actions: [
-                  "Gemini等の対話型AIに対し、ターゲットやサイトの目的を伝える",
-                  "「ミニマル」「信頼感」など、好みの雰囲気を具体的に言語化",
-                  "AIにベースとなるBuild用プロンプトを生成させる"
-                ],
-                tips: [
-                  "参考サイトのURLを読み込ませると、より理想に近い構成案が得られます",
-                  "具体的に必要なセクション（Hero, Works, Contact等）を明示する",
-                  "競合サイトの分析結果をプロンプトに盛り込むのも有効"
-                ]
-              },
-              {
-                step: "02",
-                title: "AI Studioで生成",
-                desc: "Google AI StudioのBuildモードを活用し、対話しながらコードを実装・調整します。",
-                actions: [
-                  "Buildモードに生成したプロンプトを貼り付け、初期コードを出力",
-                  "右側のプレビューでリアルタイムに変更を確認",
-                  "「〜を日本語に」「余白を広く」など、日本語で追加指示を出す"
-                ],
-                tips: [
-                  "修正は一度にたくさん頼まず、一つずつ指示を出すのがコツです",
-                  "「Goodpatchのように」など、具体的なブランド名を出すと伝わりやすい",
-                  "エラー時はエラーメッセージをそのまま伝えて修正を依頼する"
-                ],
-                code: "現在のサイトを、外部ファイルへの依存なしで、\nHTML・CSS・JavaScriptすべてを\n1つのindex.htmlに統合して出力してください"
-              },
-              {
-                step: "03",
-                title: "保存（ダウンロード）",
-                desc: "完成したコードを検証し、ローカル環境で最終的なパッケージとして保存します。",
-                actions: [
-                  "画面右上のダウンロードアイコンをクリックし、ファイルをPCに保存",
-                  "保存したファイルをブラウザで開き、スクロールや動作を確認",
-                  "必要に応じて、メタタグ（SEO用）やfaviconの最終調整を行う"
-                ],
-                tips: [
-                  "保存する前に「1つのファイルに統合」の指示が完了しているか再確認",
-                  "画像が正常に表示されるか（no-referrerの設定など）を最終チェック",
-                  "バックアップとして、AI Studio上の履歴も残しておく"
-                ]
-              },
-              {
-                step: "04",
-                title: "GitHub Pagesで公開",
-                desc: "GitHubのリポジトリにファイルをデプロイし、世界中に無料で公開を完了します。",
-                actions: [
-                  "GitHubで自分のリポジトリを作成（例: my-lab-site）",
-                  "index.htmlをリポジトリへドラッグ＆ドロップしてコミット",
-                  "Settings > Pages から「Deploy from a branch」を選択して設定"
-                ],
-                tips: [
-                  "独自ドメインを設定することで、よりプロフェッショナルな印象に",
-                  "GitHub Actionsを使えば、自動デプロイ環境の構築も可能",
-                  "制作過程をREADME.mdに記載し、ポートフォリオとしての価値を高める"
-                ],
-                warning: "※設定後、URLが有効になるまで数分の反映待ち時間が発生します"
-              }
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                viewport={{ once: true }}
-                className="bg-studio-gray p-8 md:p-12 border border-border-light relative group hover:border-accent-red transition-colors"
-              >
-                <div className="flex justify-between items-start mb-8">
-                  <span className="text-5xl font-black text-accent-red/20">{item.step}</span>
-                  <div className="h-px bg-border-light flex-grow mx-8 mt-6" />
-                </div>
-                
-                <h3 className="text-3xl font-bold mb-6 tracking-tight">{item.title}</h3>
-                <p className="text-gray-600 mb-8 font-light leading-relaxed">{item.desc}</p>
-                
-                {item.code && (
-                  <div className="mb-10 bg-studio-black p-6 font-mono text-xs text-green-400 overflow-x-auto">
-                    <p className="text-gray-500 mb-3 border-b border-gray-800 pb-2">// AI Studio Prompt Example</p>
-                    <pre className="whitespace-pre-wrap">{item.code}</pre>
-                  </div>
-                )}
-                
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-accent-red block mb-4">具体的なアクション</span>
-                    <ul className="space-y-3">
-                      {item.actions.map((act, idx) => (
-                        <li key={idx} className="text-sm font-medium flex items-start space-x-2">
-                          <span className="text-accent-red mt-1">●</span>
-                          <span>{act}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 block mb-4">ヒント</span>
-                    <ul className="space-y-3">
-                      {item.tips.map((tip, idx) => (
-                        <li key={idx} className="text-sm text-gray-500 font-light flex items-start space-x-2">
-                          <span className="mt-1">・</span>
-                          <span>{tip}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                {item.warning && (
-                  <div className="mt-10 pt-6 border-t border-border-light">
-                    <p className="text-sm font-bold text-accent-red animate-pulse">{item.warning}</p>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-
-          <div className="flex flex-col items-center justify-center py-20 px-6 border border-studio-black">
-            <p className="text-2xl font-bold mb-10 text-center tracking-tight leading-relaxed max-w-2xl">
-              このサイトそのものが、AIとの対話から生まれました。<br />
-              一歩踏み出して、あなたの想像力を形にしましょう。
-            </p>
-            <motion.a
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              href="https://aistudio.google.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group bg-studio-black text-white px-16 py-8 rounded-none font-bold tracking-widest hover:bg-accent-red transition-all flex items-center space-x-4 text-lg"
-            >
-              <span>GET STARTED WITH AI STUDIO</span>
-              <ArrowUpRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-            </motion.a>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer id="contact" className="whitespace-relaxed border-t border-border-light pt-32 pb-12">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-24 mb-32 text-center md:text-left">
-            <div>
-              <h2 className="text-6xl md:text-8xl font-extrabold tracking-tighter mb-8">
-                実験を <br />
-                <span className="text-accent-red">共に</span>。
-              </h2>
-              <p className="text-2xl text-gray-400 font-light mb-4">
-                最新AIに関する知見の提供、共同研究のご依頼はこちらから。
-              </p>
-              <p className="text-sm text-accent-red font-medium mb-12">
-                ※現在準備中のため、このフォームは送信されません
-              </p>
-              <a
-                href="mailto:mail@example.com"
-                className="text-4xl md:text-6xl font-bold tracking-tighter decoration-accent-red underline underline-offset-[12px] hover:text-accent-red transition-colors"
-              >
-                mail@example.com
-              </a>
-            </div>
-            <div className="flex flex-col justify-end items-center md:items-end space-y-12">
-              <div className="grid grid-cols-2 gap-12 text-sm font-bold tracking-widest uppercase">
-                <div className="flex flex-col space-y-4">
-                  <a href="#" className="hover:text-accent-red">Dribbble</a>
-                  <a href="#" className="hover:text-accent-red">Behance</a>
-                  <a href="#" className="hover:text-accent-red">Instagram</a>
-                </div>
-                <div className="flex flex-col space-y-4">
-                  <a href="#" className="hover:text-accent-red">LinkedIn</a>
-                  <a href="#" className="hover:text-accent-red">Twitter</a>
-                  <a href="#" className="hover:text-accent-red">プライバシーポリシー</a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col md:flex-row justify-between items-center text-xs font-bold tracking-widest text-gray-400 uppercase space-y-4 md:space-y-0">
-            <div>© {new Date().getFullYear()} tayu AI RESEARCH LAB</div>
-            <div className="flex space-x-8">
-              <span>Osaka Lab</span>
-              <span>Online Archive</span>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
-  );
-}
+    <section class="relative h-screen flex items-center overflow-hidden">
+        <div id="hero-bg" class="absolute inset-0 z-0 origin-center transition-transform duration-100 ease-out">
+            <div class="absolute inset-0 bg-gradient-to-b from-white/20 to-white z-10"></div>
+            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000" class="w-full h-full object-cover opacity-10 grayscale" alt="Minimalist Architecture" referrerpolicy="no-referrer" />
+        </div>
+        <div class="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full">
+            <div class="fade-up max-w-4xl" data-delay="0">
+                <h1 class="text-6xl md:text-8xl lg:text-9xl font-extrabold leading-[1.1] tracking-tighter text-studio-black mb-12">
+                    AIラボ <br><span class="text-accent-red">実験</span>と<br>創造の記録。
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-400 max-w-2xl mb-12 leading-relaxed font-light">最新AIツールの活用方法と実験結果を記録する、個人のAIラボラトリー。</p>
+                <button class="group flex items-center space-x-4 bg-studio-black text-white px-10 py-5 rounded-none font-bold tracking-widest hover:bg-accent-red transition-all hover:scale-105 active:scale-95 duration-200">
+                    <span>実験結果を見る</span>
+                    <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-2 transition-transform"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+    <section id="services" class="whitespace-relaxed bg-studio-gray">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 space-y-4">
+                <h2 class="text-4xl md:text-6xl font-extrabold tracking-tighter">研究 <br><span class="text-accent-red">領域</span>。</h2>
+                <p class="text-lg text-gray-500 max-w-sm leading-relaxed">AI技術の進化をリアルタイムで追い、クリエイティブへの応用を試行しています。</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8" id="services-grid"></div>
+        </div>
+    </section>
+    <section id="works" class="whitespace-relaxed">
+        <div class="max-w-7xl mx-auto">
+            <div class="mb-24 flex items-center justify-between">
+                <h2 class="text-5xl md:text-7xl font-extrabold tracking-tighter">実験ノート</h2>
+                <div class="hidden md:block w-32 h-[1px] bg-border-light"></div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-x-12 gap-y-24" id="works-grid"></div>
+        </div>
+    </section>
+    <section id="about" class="whitespace-relaxed bg-studio-black text-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid lg:grid-cols-2 gap-24 items-center">
+                <div class="fade-left">
+                    <h2 class="text-5xl md:text-7xl font-extrabold tracking-tighter mb-12">実験は、<br>終わらない。</h2>
+                    <p class="text-xl md:text-2xl text-gray-400 leading-relaxed font-light mb-12">このサイトは、個人のAIラボラトリーです。日進月歩のAI技術を実際に使い倒し、何ができるのか、どんな課題があるのかをアーカイブしています。技術と表現の新しい形を模索しています。</p>
+                    <div class="flex space-x-12">
+                        <div><div class="text-4xl font-bold mb-2">50+</div><div class="text-xs uppercase tracking-widest text-gray-500 font-bold">検証ツール数</div></div>
+                        <div><div class="text-4xl font-bold mb-2">300+</div><div class="text-xs uppercase tracking-widest text-gray-500 font-bold">生成アーカイブ</div></div>
+                    </div>
+                </div>
+                <div class="relative aspect-video">
+                    <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=1000" class="w-full h-full object-cover filter grayscale" alt="AI研究イメージ" referrerpolicy="no-referrer" />
+                    <div class="absolute inset-0 bg-accent-red/10 mix-blend-multiply"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="log" class="whitespace-relaxed bg-white border-y border-border-light">
+        <div class="max-w-7xl mx-auto">
+            <div class="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-8">
+                <div class="max-w-2xl">
+                    <h2 class="text-5xl md:text-7xl font-extrabold tracking-tighter mb-8">AI LOG<span class="text-accent-red">.</span></h2>
+                    <p class="text-2xl text-gray-400 font-light leading-relaxed">Google AI Studio × GitHub Pagesでサイトを作る完全マニュアル</p>
+                </div>
+                <div class="bg-studio-gray p-6 border-l-4 border-accent-red">
+                    <p class="text-xs font-bold tracking-widest text-gray-500 uppercase mb-2">Last Updated</p>
+                    <p class="text-sm font-mono font-bold tracking-tighter">2026.05.12 REV.04</p>
+                </div>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-12 mb-32" id="logs-grid"></div>
+            <div class="flex flex-col items-center justify-center py-20 px-6 border border-studio-black">
+                <p class="text-2xl font-bold mb-10 text-center tracking-tight leading-relaxed max-w-2xl">このサイトそのものが、AIとの対話から生まれました。<br>一歩踏み出して、あなたの想像力を形にしましょう。</p>
+                <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" class="group bg-studio-black text-white px-16 py-8 rounded-none font-bold tracking-widest hover:bg-accent-red transition-all flex items-center space-x-4 text-lg hover:scale-105 active:scale-95 duration-200">
+                    <span>GET STARTED WITH AI STUDIO</span>
+                    <i data-lucide="arrow-up-right" class="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" style="width: 24px; height: 24px;"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+    <footer id="contact" class="whitespace-relaxed border-t border-border-light pt-32 pb-12">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-24 mb-32 text-center md:text-left">
+                <div>
+                    <h2 class="text-6xl md:text-8xl font-extrabold tracking-tighter mb-8">実験を <br><span class="text-accent-red">共に</span>。</h2>
+                    <p class="text-2xl text-gray-400 font-light mb-4">最新AIに関する知見の提供、共同研究のご依頼はこちらから。</p>
+                    <p class="text-sm text-accent-red font-medium mb-12">※現在準備中のため、このフォームは送信されません</p>
+                    <a href="mailto:mail@example.com" class="text-4xl md:text-6xl font-bold tracking-tighter decoration-accent-red underline underline-offset-[12px] hover:text-accent-red transition-colors">mail@example.com</a>
+                </div>
+                <div class="flex flex-col justify-end items-center md:items-end space-y-12">
+                    <div class="grid grid-cols-2 gap-12 text-sm font-bold tracking-widest uppercase">
+                        <div class="flex flex-col space-y-4"><a href="#" class="hover:text-accent-red">Dribbble</a><a href="#" class="hover:text-accent-red">Behance</a><a href="#" class="hover:text-accent-red">Instagram</a></div>
+                        <div class="flex flex-col space-y-4"><a href="#" class="hover:text-accent-red">LinkedIn</a><a href="#" class="hover:text-accent-red">Twitter</a><a href="#" class="hover:text-accent-red">プライバシーポリシー</a></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row justify-between items-center text-xs font-bold tracking-widest text-gray-400 uppercase space-y-4 md:space-y-0">
+                <div>© 2026 tayu AI RESEARCH LAB</div>
+                <div class="flex space-x-8"><span>Osaka Lab</span><span>Online Archive</span></div>
+            </div>
+        </div>
+    </footer>
+    <script>
+        const WORKS = [
+          { title: "シネマティック映像の生成実験", tool: "Runway Gen-3 Alpha", category: "動画", tags: ["Runway", "Luma Dream Machine", "Dify"], features: "テキストから高精細なシネマティック映像を生成する機能。", outcome: "ライティングの指定により、実写と見紛うクオリティの出力が可能になった。", image: "https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&q=80&w=1000" },
+          { title: "建築デザインのパターン生成", tool: "Midjourney v6.1", category: "画像", tags: ["Midjourney", "Stable Diffusion"], features: "複雑なプロンプトを理解し、意図した通りの構図で画像を生成する。", outcome: "パラメータ調整により、素材の質感を微細にコントロールする手法を確立した。", image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1000" },
+          { title: "論理的対話を導くプロンプト", tool: "Claude 3.5 Sonnet", category: "プロンプト", tags: ["Claude", "ChatGPT"], features: "一歩ずつ考えさせる（CoT）手法を用いた思考プロセス。", outcome: "複雑な課題に対しても、AIが段階的な解決策を提示し、納得感を高められた。", image: "https://images.unsplash.com/photo-1456324504439-39ba7144c529?auto=format&fit=crop&q=80&w=1000" },
+          { title: "リアルタイム映像変換の極致", tool: "Krea.ai", category: "リアルタイム", tags: ["Krea", "ComfyUI"], features: "スケッチやWebカメラ動画をリアルタイムで高品質な映像に変換する。", outcome: "低遅延でのスタイル変換が可能になり、ライブパフォーマンスへの応用が期待できる。", image: "https://images.unsplash.com/photo-1551033406-611cf9a28f67?auto=format&fit=crop&q=80&w=1000" },
+          { title: "AIラボ・サイト制作ログ", tool: "Google AI Studio & Cursor", category: "ログ", tags: ["React", "Tailwind", "Gemini"], features: "AIと対話しながらサイトのデザインから実装までを一貫して行うプロセス。", outcome: "プロンプトによる指示だけで、複雑なレイアウト調整や多言語化が数分で完了した。", image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=1000" }
+        ];
+
+        const SERVICES = [
+          { title: "動画生成", description: "最新のVideo AIを活用した生成プロセスと検証記録。", index: "01", tools: [
+            { name: "Canva", steps: ["1. 「マジックメディア」機能の選択", "2. 生成プロンプトおよびスタイルの入力", "3. 生成された映像の編集と音声の統合"], link: "https://www.canva.com/", prompt: "未来の都市、空飛ぶ車、シネマティック、青白いライティング", result: "青白く光る未来の街を空飛ぶ車が通り抜ける15秒の映像" },
+            { name: "CapCut", steps: ["1. 「スクリプトから動画生成」機能の選択", "2. 動画台本（スクリプト）の入力", "3. AIによる素材選定とナレーションの動的生成"], link: "https://www.capcut.com/", prompt: "AIの魅力について解説するショート動画の台本", result: "自動でナレーションとオシャレな字幕がついた解説動画" },
+            { name: "Gemini", steps: ["1. ビジュアル構成案および詳細スクリプトの生成", "2. シーンごとの視覚的指示（プロンプト）の最適化", "3. 制作工程におけるタスク管理とスケジューリング"], link: "https://gemini.google.com/", prompt: "30秒のAI紹介動画の、誰にでも伝わる絵コンテを書いて", result: "シーンごとのイラスト構成やセリフが書かれた詳しい指示書" }
+          ]},
+          { title: "画像生成", description: "AIによるビジュアル生成プロトタイプの構築と、プロンプトエンジニアリングの最適化手法。", index: "02", tools: [
+            { name: "Stable Diffusion", steps: ["1. 目的のモデルおよびパラメータの設定", "2. プロンプト（指示文）および除外要素の入力", "3. 生成実行後のバリエーション比較と保存"], link: "https://stability.ai/", prompt: "masterpiece, best quality, girl with white hair, standing in sunflowers", result: "ひまわり畑に立つ白い髪の少女のイラスト" },
+            { name: "Midjourney", steps: ["1. Discord上で「/imagine」コマンドを実行", "2. 英文プロンプトによる詳細な構図・質感の指示", "3. アップスケール（U）による高解像度データの出力"], link: "https://www.midjourney.com/", prompt: "A futuristic city made of glass, cinematic lighting --ar 16:9", result: "ガラスでできた透明感あふれる未来都市の画像" },
+            { name: "Gemini", steps: ["1. 生成対象の要件を具体的かつ簡潔に入力", "2. アスペクト比等のフォーマットを指定", "3. チャット形式での逐次的な修正と品質向上"], link: "https://gemini.google.com/", prompt: "宇宙でお茶を飲んでいる可愛い白猫の画像を作って", result: "星空の下でティーカップを持つ可愛い猫の画像" },
+            { name: "ChatGPT (DALL-E 3)", steps: ["1. 生成したいコンテンツのイメージを日本語で入力", "2. 対話を通じた詳細なレイアウトや色調の調整", "3. 提案されたバリエーションからの最適解の選定"], link: "https://openai.com/chatgpt", prompt: "空を飛ぶ巨大なクジラと、その上に乗る冒険者のファンタジー絵", result: "幻想的な空飛ぶクジラの迫力あるイラスト" },
+            { name: "Flux.1", steps: ["1. 最新のFluxモデルが提供されているサイトへアクセス", "2. 簡潔なテキストプロンプトによる生成指示", "3. 高精細かつ写実的な出力結果の検証と保存"], link: "https://blackforestlabs.ai/", prompt: "hyper-realistic close up of a human eye with a galaxy inside", result: "瞳の虹彩が銀河の渦になっている、超リアルな瞳" },
+            { name: "Leonardo.ai", steps: ["1. 用途に合わせたプリセットスタイルの選択", "2. パラメータ調整およびプロンプトの入力", "3. AI Canvasによる画像の領域拡張および再編集"], link: "https://leonardo.ai/", prompt: "Isometric 3D icon of a cozy laboratory with red points", result: "赤がアクセントの、立体的で可愛い研究所のアイコン" }
+          ]},
+          { title: "AIエージェント", description: "自律型エージェントの構築と業務フローへの統合検証。", index: "03", tools: [
+            { name: "Dify", steps: ["1. ナレッジベース（知識データ）の構築", "2. 思考プロセス（ワークフロー）の設計", "3. アプリケーションとしてのデプロイと検証"], link: "https://dify.ai/", prompt: "このプリントの内容を分かりやすく3行で教えてくれるボットを作って", result: "複雑な資料を瞬時に要約・解説するカスタムアプリケーション" },
+            { name: "CrewAI", steps: ["1. 各エージェントへの役割（Role）定義", "2. タスク要求および実行順序の設定", "3. 複数エージェント間の自律的協調による出力"], link: "https://www.crewai.com/", prompt: "歴史担当と作家担当の2人で協力して作品を書いて", result: "複数のAIが役割を分担して生成した、一貫性のあるコンテンツ" },
+            { name: "AutoGPT", steps: ["1. 目標（Goal）の設定と権限の付与", "2. AIによる逐次的なタスク生成と判断の監視", "3. 自動収集された情報に基づく成果物の出力"], link: "https://github.com/Significant-Gravitas/AutoGPT", prompt: "将来有望なAIニュースを5つ集めてレポートを保存して", result: "人による介入なしで完走した調査レポート" },
+            { name: "GPT Engineer", steps: ["1. アプリケーションの要件定義の入力", "2. コードベースの自動生成およびプレビュー", "3. 動的なデバッグと機能の追加実装"], link: "https://gptengineer.app/", prompt: "今日のラッキーアイテムを教えてくれるおみくじアプリを作って", result: "ノーコードで実装されたフルスタックWebアプリケーション" },
+            { name: "AgentGPT", steps: ["1. エージェントの設計とミッションの設定", "2. タスクの自動生成と自律的実行", "3. 最終成果物の統合とフィードバック"], link: "https://agentgpt.reworkd.ai/", prompt: "文化祭で最高に出し物を盛り上げる方法を10個探して", result: "目標達成のためにAIが立案した戦略的なアイデアリスト" }
+          ]},
+          { title: "Web制作", description: "AIを活用した迅速なプロトタイピングとエンジニアリング。", index: "04", tools: [
+            { name: "Google AI Studio", steps: ["1. BuildモードによるUI/UX設計の開始", "2. 対話形式によるコンポーネントの反復的修正", "3. 高度なエンジニアリング指示によるコードの最適化"], link: "https://aistudio.google.com/app/build", prompt: "宇宙をテーマにした、かっこいい自己紹介サイトを作って。日本語でお願い。", result: "デザインからロジックまで完結した、本番レベルのWebプロジェクト" },
+            { name: "GitHub Pages", steps: ["1. GitHubリポジトリの作成および初期設定", "2. ソースコードのアップロードとバージョン管理", "3. ホスティング設定によるグローバル公開"], link: "https://pages.github.com/", prompt: "作成した index.html をインターネット上に公開する", result: "世界中からアクセス可能なレスポンシブWebサイト" }
+          ]}
+        ];
+
+        const LOGS = [
+          { step: "01", title: "構成案の作成", desc: "理想のサイト構成やデザインの方向性をAIに伝え、ベースとなる設計図を構築します。", actions: ["Gemini等の対話型AIに対し、ターゲットやサイトの目的を伝える", "「ミニマル」「信頼感」など、好みの雰囲気を具体的に言語化", "AIにベースとなるBuild用プロンプトを生成させる"], tips: ["参考サイトのURLを読み込ませると、より理想に近い構成案が得られます", "具体的に必要なセクション（Hero, Works, Contact等）を明示する", "競合サイトの分析結果をプロンプトに盛り込むのも有効"] },
+          { step: "02", title: "AI Studioで生成", desc: "Google AI StudioのBuildモードを活用し、対話しながらコードを実装・調整します。", actions: ["Buildモードに生成したプロンプトを貼り付け、初期コードを出力", "右側のプレビューでリアルタイムに変更を確認", "「〜を日本語に」「余白を広く」など、日本語で追加指示を出す"], tips: ["修正は一度にたくさん頼まず、一つずつ指示を出すのがコツです", "「Goodpatchのように」など、具体的なブランド名を出すと伝わりやすい", "エラー時はエラーメッセージをそのまま伝えて修正を依頼する"], code: "現在のサイトを、外部ファイルへの依存なしで、\nHTML・CSS・JavaScriptすべてを\n1つのindex.htmlに統合して出力してください" },
+          { step: "03", title: "保存（ダウンロード）", desc: "完成したコードを検証し、ローカル環境で最終的なパッケージとして保存します。", actions: ["画面右上のダウンロードアイコンをクリックし、ファイルをPCに保存", "保存したファイルをブラウザで開き、スクロールや動作を確認", "必要に応じて、メタタグ（SEO用）やfaviconの最終調整を行う"], tips: ["保存する前に「1つのファイルに統合」の指示が完了しているか再確認", "画像が正常に表示されるか（no-referrerの設定など）を最終チェック", "バックアップとして、AI Studio上の履歴も残しておく"] },
+          { step: "04", title: "GitHub Pagesで公開", desc: "GitHubのリポジトリにファイルをデプロイし、世界中に無料で公開を完了します。", actions: ["GitHubで自分のリポジトリを作成（例: my-lab-site）", "index.htmlをリポジトリへドラッグ＆ドロップしてコミット", "Settings > Pages から「Deploy from a branch」を選択して設定"], tips: ["独自ドメインを設定することで、よりプロフェッショナルな印象に", "GitHub Actionsを使えば、自動デプロイ環境の構築も可能", "制作過程をREADME.mdに記載し、ポートフォリオとしての価値を高める"], warning: "※設定後、URLが有効になるまで数分の反映待ち時間が発生します" }
+        ];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const idMap = { "動画生成": "video", "画像生成": "image", "AIエージェント": "agent", "Web制作": "web" };
+            
+            // Render Services
+            const servicesGrid = document.getElementById("services-grid");
+            if(servicesGrid) {
+                servicesGrid.innerHTML = SERVICES.map((service, i) => `
+                <div id="${idMap[service.title] || 'service'}" class="fade-up service-card bg-white p-10 md:p-14 border border-border-light flex flex-col justify-between overflow-hidden h-96 cursor-pointer" data-delay="${i * 100}">
+                    <div class="w-full">
+                        <div class="flex justify-between items-start mb-8">
+                            <span class="text-xs font-bold text-accent-red tracking-[0.2em]">${service.index}</span>
+                            <button class="service-toggle transition-all p-3 hover:bg-gray-100 rounded-full border border-border-light opacity-0 group-hover:opacity-100 text-accent-red"><i data-lucide="arrow-right" class="service-toggle-icon transition-transform duration-300" style="width: 20px; height: 20px;"></i></button>
+                        </div>
+                        <h3 class="text-3xl md:text-5xl font-bold mb-6 tracking-tighter">${service.title}</h3>
+                        <p class="text-gray-400 font-light leading-[1.8] mb-10 text-lg max-w-sm">${service.description}</p>
+                        <div class="accordion-wrapper">
+                            <div class="accordion-inner">
+                                <div class="pt-10 border-t border-border-light space-y-6">
+                                    <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-6 block">詳細マニュアル</p>
+                                    ${service.tools.map((tool, idx) => `
+                                        <div class="border transition-all duration-300 border-border-light bg-studio-gray/30 hover:border-gray-300 tool-accordion" data-idx="${idx}">
+                                            <button class="tool-toggle w-full flex items-center justify-between p-6 transition-colors group/tool">
+                                                <div class="flex items-center space-x-6">
+                                                    <div class="w-1.5 h-1.5 rounded-full tool-indicator bg-gray-300"></div>
+                                                    <span class="font-bold text-lg tracking-tight tool-title text-gray-500">${tool.name}</span>
+                                                </div>
+                                                <div class="tool-icon text-gray-300 transition-transform duration-300"><i data-lucide="arrow-right" style="width: 20px; height: 20px;"></i></div>
+                                            </button>
+                                            <div class="accordion-wrapper">
+                                                <div class="accordion-inner">
+                                                    <div class="px-8 pb-10 pt-4">
+                                                        <div class="border-t border-border-light pt-8 space-y-12">
+                                                            <div>
+                                                                <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-red mb-6 flex items-center space-x-4"><span>1. 使い方の手順</span><div class="h-px bg-accent-red/20 flex-grow"></div></div>
+                                                                <ul class="space-y-4">${tool.steps.map((s, sIdx) => `<li class="text-base font-medium flex items-start space-x-4"><span class="bg-accent-red text-white text-[10px] font-bold rounded-full w-6 h-6 flex items-center justify-center mt-1 shrink-0">${sIdx + 1}</span><span class="text-studio-black leading-[1.8]">${s}</span></li>`).join('')}</ul>
+                                                            </div>
+                                                            <div>
+                                                                <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center space-x-4"><span>2. 公式リンク</span><div class="h-px bg-gray-200 flex-grow"></div></div>
+                                                                <a href="${tool.link}" target="_blank" rel="noopener noreferrer" class="group/link inline-flex items-center space-x-6 bg-studio-black text-white px-10 py-6 text-[10px] font-bold tracking-[0.2em] hover:bg-accent-red transition-all shadow-xl uppercase"><span>Launch Platform</span><i data-lucide="arrow-up-right" class="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" style="width: 18px; height: 18px;"></i></a>
+                                                            </div>
+                                                            <div>
+                                                                <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-6 flex items-center space-x-4"><span>3. 実験結果（成果物）</span><div class="h-px bg-gray-200 flex-grow"></div></div>
+                                                                <div class="bg-studio-gray p-8 border border-border-light rounded-sm group/card relative overflow-hidden">
+                                                                    <div class="absolute -top-10 -right-10 w-32 h-32 bg-accent-red/5 rounded-full blur-3xl" style="animation: spinPulse 5s infinite;"></div>
+                                                                    <div class="flex items-center space-x-4 mb-4 relative z-10">
+                                                                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm"><i data-lucide="sparkles" class="text-accent-red" style="width: 20px; height: 20px;"></i></div>
+                                                                        <p class="text-sm font-bold tracking-tighter">SUCCESSFUL OUTPUT</p>
+                                                                    </div>
+                                                                    <p class="text-base text-gray-600 italic leading-[1.8] relative z-10 font-medium whitespace-pre-wrap">「${tool.result}」</p>
+                                                                </div>
+                                                            </div>
+                                                            <div>
+                                                                <div class="text-[10px] font-bold uppercase tracking-[0.2em] text-studio-black/40 mb-6 flex items-center space-x-4"><span>4. 使用したプロンプト</span><div class="h-px bg-gray-200 flex-grow"></div></div>
+                                                                <div class="bg-studio-black p-8 font-mono text-xs text-green-400 rounded-sm shadow-xl relative overflow-hidden group/code cursor-text">
+                                                                    <div class="flex items-center justify-between mb-4 border-b border-gray-800 pb-3"><span class="text-gray-500 font-bold uppercase tracking-widest text-[9px]">Prompt Content</span><div class="flex space-x-1.5"><div class="w-2 h-2 rounded-full bg-red-900/50"></div><div class="w-2 h-2 rounded-full bg-orange-900/50"></div><div class="w-2 h-2 rounded-full bg-green-900/50"></div></div></div>
+                                                                    <code class="block whitespace-pre-wrap leading-relaxed select-all">${tool.prompt}</code>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `).join('');
+            }
+
+            // Render Works
+            const worksGrid = document.getElementById("works-grid");
+            if(worksGrid) {
+                worksGrid.innerHTML = WORKS.map((work, i) => `
+                <div class="fade-up group cursor-pointer" data-delay="${(i % 2) * 100}">
+                    <div class="relative overflow-hidden mb-8 aspect-[4/5] bg-studio-gray">
+                        <img src="${work.image}" alt="${work.title}" class="w-full h-full object-cover transition-transform duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-105" referrerpolicy="no-referrer" />
+                        <div class="absolute top-6 left-6 bg-white px-4 py-2 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all transform translate-y-4 group-hover:translate-y-0 text-xs font-bold tracking-widest text-studio-black shadow-lg">DETAIL</div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="flex flex-wrap gap-2"><span class="text-[10px] font-bold bg-accent-red text-white px-2 py-0.5 tracking-widest">${work.category}</span>${work.tags.map(t => `<span class="text-[10px] font-bold bg-studio-black text-white px-2 py-0.5 tracking-widest">${t}</span>`).join('')}</div>
+                        <div>
+                            <h3 class="text-3xl font-bold tracking-tight mb-4">${work.title}</h3>
+                            <div class="grid grid-cols-1 gap-4 text-sm border-l-2 border-accent-red pl-4">
+                                <div><span class="text-gray-400 font-bold block text-[10px] uppercase tracking-widest mb-1">ツール名</span><p class="font-medium">${work.tool}</p></div>
+                                <div><span class="text-gray-400 font-bold block text-[10px] uppercase tracking-widest mb-1">機能</span><p class="font-light text-gray-600 italic">「${work.features}」</p></div>
+                                <div><span class="text-gray-400 font-bold block text-[10px] uppercase tracking-widest mb-1">学習の成果</span><p class="font-medium">成果：${work.outcome}</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `).join('');
+            }
+
+            // Render Logs
+            const logsGrid = document.getElementById("logs-grid");
+            if(logsGrid) {
+                logsGrid.innerHTML = LOGS.map((item, i) => `
+                <div class="fade-up bg-studio-gray p-8 md:p-12 border border-border-light relative group hover:border-accent-red transition-colors" data-delay="${i * 100}">
+                    <div class="flex justify-between items-start mb-8"><span class="text-5xl font-black text-accent-red/20">${item.step}</span><div class="h-px bg-border-light flex-grow mx-8 mt-6"></div></div>
+                    <h3 class="text-3xl font-bold mb-6 tracking-tight">${item.title}</h3>
+                    <p class="text-gray-600 mb-8 font-light leading-relaxed">${item.desc}</p>
+                    ${item.code ? `<div class="mb-10 bg-studio-black p-6 font-mono text-xs text-green-400 overflow-x-auto"><p class="text-gray-500 mb-3 border-b border-gray-800 pb-2">// AI Studio Prompt Example</p><pre class="whitespace-pre-wrap">${item.code}</pre></div>` : ''}
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div><span class="text-[10px] font-bold uppercase tracking-widest text-accent-red block mb-4">具体的なアクション</span><ul class="space-y-3">${item.actions.map(act => `<li class="text-sm font-medium flex items-start space-x-2"><span class="text-accent-red mt-1">●</span><span>${act}</span></li>`).join('')}</ul></div>
+                        <div><span class="text-[10px] font-bold uppercase tracking-widest text-gray-500 block mb-4">ヒント</span><ul class="space-y-3">${item.tips.map(tip => `<li class="text-sm text-gray-500 font-light flex items-start space-x-2"><span class="mt-1">・</span><span>${tip}</span></li>`).join('')}</ul></div>
+                    </div>
+                    ${item.warning ? `<div class="mt-10 pt-6 border-t border-border-light"><p class="text-sm font-bold text-accent-red animate-pulse">${item.warning}</p></div>` : ''}
+                </div>
+                `).join('');
+            }
+
+            // Init Lucide Icons dynamically after rendering
+            lucide.createIcons();
+
+            // Interactions
+            setupInteractions();
+        });
+
+        function setupInteractions() {
+            // Navbar Scroll
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('bg-white/80', 'backdrop-blur-md', 'border-b', 'border-border-light', 'py-4');
+                    navbar.classList.remove('bg-transparent', 'py-8');
+                } else {
+                    navbar.classList.add('bg-transparent', 'py-8');
+                    navbar.classList.remove('bg-white/80', 'backdrop-blur-md', 'border-b', 'border-border-light', 'py-4');
+                }
+            });
+
+            // Hero Parallax
+            const heroBg = document.getElementById('hero-bg');
+            window.addEventListener('scroll', () => {
+                const scrollY = window.scrollY;
+                if (scrollY > 1000) return;
+                if (heroBg) {
+                    heroBg.style.opacity = Math.max(0, 1 - scrollY / 200).toFixed(3);
+                    heroBg.style.transform = `scale(${Math.min(1.05, 1 + (scrollY / 300) * 0.05).toFixed(3)})`;
+                }
+            });
+
+            // Mobile Menu
+            const menuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+            let isMenuOpen = false;
+
+            const toggleMenu = () => {
+                isMenuOpen = !isMenuOpen;
+                if (isMenuOpen) {
+                    mobileMenu.classList.remove('hidden');
+                    setTimeout(() => mobileMenu.classList.remove('opacity-0'), 10);
+                    menuIcon.classList.add('hidden');
+                    closeIcon.classList.remove('hidden');
+                } else {
+                    mobileMenu.classList.add('opacity-0');
+                    setTimeout(() => mobileMenu.classList.add('hidden'), 300);
+                    menuIcon.classList.remove('hidden');
+                    closeIcon.classList.add('hidden');
+                }
+            };
+            menuBtn.addEventListener('click', toggleMenu);
+            document.querySelectorAll('.mobile-link').forEach(link => link.addEventListener('click', () => { if(isMenuOpen) toggleMenu(); }));
+
+            // Accordions
+            const serviceCards = document.querySelectorAll('.service-card');
+            serviceCards.forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if (e.target.closest('.tool-accordion')) return;
+                    serviceCards.forEach(other => {
+                        if (other !== card) {
+                            other.classList.remove('is-open');
+                            const w = other.querySelector('.accordion-wrapper');
+                            if (w) w.classList.remove('is-open');
+                        }
+                    });
+                    this.classList.toggle('is-open');
+                    const wrapper = this.querySelector('.accordion-wrapper');
+                    if(wrapper) wrapper.classList.toggle('is-open');
+                });
+            });
+
+            const toolAccordions = document.querySelectorAll('.tool-accordion');
+            toolAccordions.forEach(toolBox => {
+                const btn = toolBox.querySelector('.tool-toggle');
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const isOpen = toolBox.classList.contains('border-accent-red');
+                    const parent = toolBox.closest('.service-card');
+
+                    if (parent) {
+                        parent.querySelectorAll('.tool-accordion').forEach(tb => {
+                            tb.classList.remove('border-accent-red', 'bg-white');
+                            tb.classList.add('border-border-light', 'bg-studio-gray/30');
+                            const w = tb.querySelector('.accordion-wrapper');
+                            if (w) w.classList.remove('is-open');
+                            const title = tb.querySelector('.tool-title'), icon = tb.querySelector('.tool-icon'), dot = tb.querySelector('.tool-indicator');
+                            if(title) { title.classList.remove('text-studio-black'); title.classList.add('text-gray-500'); }
+                            if(icon) { icon.classList.remove('text-accent-red', 'rotate-90'); icon.classList.add('text-gray-300'); }
+                            if(dot) { dot.classList.remove('bg-accent-red'); dot.classList.add('bg-gray-300'); }
+                        });
+                    }
+
+                    if (!isOpen) {
+                        toolBox.classList.add('border-accent-red', 'bg-white');
+                        toolBox.classList.remove('border-border-light', 'bg-studio-gray/30');
+                        const w = toolBox.querySelector('.accordion-wrapper');
+                        if (w) w.classList.add('is-open');
+                        const title = toolBox.querySelector('.tool-title'), icon = toolBox.querySelector('.tool-icon'), dot = toolBox.querySelector('.tool-indicator');
+                        if(title) { title.classList.add('text-studio-black'); title.classList.remove('text-gray-500'); }
+                        if(icon) { icon.classList.add('text-accent-red', 'rotate-90'); icon.classList.remove('text-gray-300'); }
+                        if(dot) { dot.classList.add('bg-accent-red'); dot.classList.remove('bg-gray-300'); }
+                    }
+                });
+            });
+
+            // Intersection Observer
+            const faders = document.querySelectorAll('.fade-up, .fade-left');
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+                    const delay = entry.target.getAttribute('data-delay');
+                    if (delay) setTimeout(() => entry.target.classList.add('is-visible'), parseInt(delay));
+                    else entry.target.classList.add('is-visible');
+                    obs.unobserve(entry.target);
+                });
+            }, { threshold: 0.15, rootMargin: "0px 0px -50px 0px" });
+            faders.forEach(f => observer.observe(f));
+        }
+    </script>
+</body>
+</html>
